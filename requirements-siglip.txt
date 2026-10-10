@@ -1,0 +1,7 @@
+# Real model path (NOT installed or run in the build sandbox; versions are unpinned on purpose - pin after your first working install)
+-r requirements.txt
+torch
+transformers
+sentencepiece
+protobuf
+streamlit
