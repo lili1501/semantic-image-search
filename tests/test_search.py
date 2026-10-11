@@ -201,3 +201,10 @@ def test_coco_converter(tmp_path):
     assert rows[0]["captions"] == ["a dog", "a puppy"] and os.path.normpath(rows[0]["image"]) == str(tmp_path / "val2017" / "000000000001.jpg")
     with pytest.raises(ValueError):
         coco_captions_to_manifest(str(tmp_path / "c.json"), str(tmp_path / "nowhere"), str(out))
+
+
+def test_write_manifest_creates_missing_folders(tmp_path):
+    from search.data import write_manifest
+    out = tmp_path / "a" / "b" / "m.jsonl"
+    write_manifest([{"image": "x.jpg", "captions": ["c"]}], str(out))
+    assert out.exists()

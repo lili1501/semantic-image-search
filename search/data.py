@@ -30,6 +30,7 @@ def read_manifest(path: str) -> list[dict]:
 
 
 def write_manifest(rows: list[dict], path: str) -> None:
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w") as f:
         for r in rows:
             f.write(json.dumps(r) + "\n")
