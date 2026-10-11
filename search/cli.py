@@ -25,6 +25,7 @@ def cmd_index(a) -> dict:
     if a.limit:
         rows = rows[:a.limit]
     enc = make_encoder(a.encoder, a.model_id)
+    print(f"device: {getattr(enc, 'device', 'n/a')}", flush=True)
     index = ImageIndex(enc.dim, a.index, recreate=True)
     t0 = time.time()
     for s in range(0, len(rows), a.batch_size):
@@ -35,7 +36,8 @@ def cmd_index(a) -> dict:
                 imgs.append(im.convert("RGB").copy())
         index.add(list(range(s, s + len(chunk))), enc.encode_images(imgs),
                   [{"path": r["image"], "caption": r["captions"][0] if r["captions"] else ""} for r in chunk])
-    info = {"encoder": enc.name, "dim": enc.dim, "images": index.count(), "seconds": round(time.time() - t0, 1)}
+    info = {"encoder": enc.name, "dim": enc.dim, "images": index.count(), "seconds": round(time.time() - t0, 1),
+            "device": str(getattr(enc, "device", "n/a"))}
     print(json.dumps(info))
     return info
 
@@ -45,13 +47,15 @@ def cmd_eval(a) -> dict:
     if a.limit:
         rows = rows[:a.limit]
     enc = make_encoder(a.encoder, a.model_id)
+    print(f"device: {getattr(enc, 'device', 'n/a')}", flush=True)
     index = ImageIndex(enc.dim, a.index)
     if index.count() != len(rows):
         raise SystemExit(f"index holds {index.count()} images but the manifest has {len(rows)} "
                          f"(use the same --manifest/--limit as when indexing)")
     texts, rel = build_queries(rows, a.relevance)
     res = evaluate(enc, index, texts, rel)
-    res.update({"gallery_size": len(rows), "encoder": enc.name, "relevance": a.relevance})
+    res.update({"gallery_size": len(rows), "encoder": enc.name, "relevance": a.relevance,
+                "device": str(getattr(enc, "device", "n/a"))})
     print(json.dumps(res, indent=2))
     if a.out:
         os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
