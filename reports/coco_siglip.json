@@ -10,8 +10,4 @@
   "gallery_size": 5000,
   "encoder": "google/siglip-base-patch16-224",
   "relevance": "image"
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 7d7e3e3 (added report after run)
