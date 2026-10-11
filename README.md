@@ -6,7 +6,7 @@ cosine nearest-neighbour queries; a FastAPI service exposes it and a Streamlit p
 
 > **Status.** The pipeline, index, metrics, API and UI are tested here with a tiny stand-in encoder on
 > synthetic coloured-shape images. **The build sandbox never ran SigLIP** (it cannot reach Hugging Face); the numbers in "Results" below were measured
-> afterwards on a GPU cluster. See "Verified vs not verified" and "Running with SigLIP".
+> afterwards on UF HiPerGator. See "Verified vs not verified" and "Running with SigLIP".
 
 ```
 images ──SigLIP image tower──▶ L2-normalised vectors ──▶ Qdrant (cosine) ◀── SigLIP text tower ◀── "query text"
@@ -95,7 +95,7 @@ confidence intervals. COCO annotations are CC BY 4.0; the images carry their Fli
 - The Flickr `captions.txt` converter on a small hand-made file.
 
 **Not verified:**
-- **Anything involving SigLIP**: model loading, the embedding dimension, GPU use, embedding throughput, and retrieval quality. `SigLIPEncoder` has never been executed; expect to fix small issues on first run.
+- **SigLIP at scale and on GPU**: the encoder ran once on HiPerGator (COCO val2017, results above), but GPU use and embedding throughput were not checked, and there are no numbers for other models or datasets.
 - Real datasets (Flickr, COCO), including the converter on a real file.
 - Qdrant server mode, HNSW recall, and behaviour at hundreds of thousands of images.
 - Latency under load; the in-process timings here (~0.2 ms search over 300 vectors) say nothing about SigLIP-scale deployments.
