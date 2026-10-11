@@ -14,7 +14,7 @@ import time
 
 from PIL import Image
 
-from search.data import flickr_captions_to_manifest, make_synthetic, read_manifest
+from search.data import coco_captions_to_manifest, flickr_captions_to_manifest, make_synthetic, read_manifest
 from search.encoders import make_encoder
 from search.evaluate import build_queries, evaluate
 from search.index import ImageIndex
@@ -69,6 +69,9 @@ def main(argv=None):
     f = sub.add_parser("flickr"); f.add_argument("--captions", required=True)
     f.add_argument("--images", required=True); f.add_argument("--out", required=True)
 
+    c = sub.add_parser("coco"); c.add_argument("--captions", required=True, help="captions_val2017.json")
+    c.add_argument("--images", required=True, help="folder with the val2017 images"); c.add_argument("--out", required=True)
+
     for name in ("index", "eval"):
         p = sub.add_parser(name)
         p.add_argument("--manifest", required=True)
@@ -87,6 +90,8 @@ def main(argv=None):
         print(make_synthetic(a.out, a.n, seed=a.seed))
     elif a.cmd == "flickr":
         print(flickr_captions_to_manifest(a.captions, a.images, a.out), "images")
+    elif a.cmd == "coco":
+        print(coco_captions_to_manifest(a.captions, a.images, a.out), "images")
     elif a.cmd == "index":
         cmd_index(a)
     else:

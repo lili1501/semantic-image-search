@@ -1,5 +1,6 @@
 import io
 import json
+import os
 
 import numpy as np
 import pytest
@@ -180,3 +181,23 @@ def test_siglip_import_is_lazy():
     except ImportError:
         with pytest.raises(ImportError):
             SigLIPEncoder()
+
+
+def test_coco_converter(tmp_path):
+    import json as _json
+    from PIL import Image
+    from search.data import coco_captions_to_manifest
+    (tmp_path / "val2017").mkdir()
+    for n in ("000000000001.jpg", "000000000002.jpg"):
+        Image.new("RGB", (8, 8)).save(tmp_path / "val2017" / n)
+    coco = {"images": [{"id": 1, "file_name": "000000000001.jpg"}, {"id": 2, "file_name": "000000000002.jpg"},
+                       {"id": 3, "file_name": "000000000003.jpg"}],                       # id 3: not on disk -> skipped
+            "annotations": [{"image_id": 1, "caption": "a dog "}, {"image_id": 1, "caption": "a puppy"},
+                            {"image_id": 2, "caption": "a cat"}, {"image_id": 3, "caption": "gone"}]}
+    (tmp_path / "c.json").write_text(_json.dumps(coco))
+    out = tmp_path / "m" / "manifest.jsonl"; out.parent.mkdir()
+    assert coco_captions_to_manifest(str(tmp_path / "c.json"), str(tmp_path / "val2017"), str(out)) == 2
+    rows = read_manifest(str(out))
+    assert rows[0]["captions"] == ["a dog", "a puppy"] and os.path.normpath(rows[0]["image"]) == str(tmp_path / "val2017" / "000000000001.jpg")
+    with pytest.raises(ValueError):
+        coco_captions_to_manifest(str(tmp_path / "c.json"), str(tmp_path / "nowhere"), str(out))

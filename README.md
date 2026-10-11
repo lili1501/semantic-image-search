@@ -29,7 +29,7 @@ images ──SigLIP image tower──▶ L2-normalised vectors ──▶ Qdrant 
 
 ```bash
 python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
-python -m pytest tests -q                                   # 15 tests
+python -m pytest tests -q                                   # 16 tests
 python -m search.cli synth --out data/synth --n 300
 python -m search.cli index --manifest data/synth/manifest.jsonl --encoder standin --index artifacts/qdrant
 python -m search.cli eval  --manifest data/synth/manifest.jsonl --encoder standin --index artifacts/qdrant --relevance attrs
@@ -62,9 +62,17 @@ Embedded Qdrant (a local folder) is brute-force exact search; to measure real HN
 run a Qdrant server (`docker run -p 6333:6333 qdrant/qdrant`), pass `--index http://localhost:6333`, and use
 `search.evaluate.ann_overlap`.
 
+### Easier dataset: COCO val2017 (5,000 images, 25k captions, no login)
+```bash
+cd data && curl -O http://images.cocodataset.org/zips/val2017.zip && curl -O http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+unzip -q val2017.zip && unzip -q annotations_trainval2017.zip annotations/captions_val2017.json && cd ..
+python -m search.cli coco --captions data/annotations/captions_val2017.json --images data/val2017 --out data/coco/manifest.jsonl
+```
+Then use `data/coco/manifest.jsonl` in steps 2-3 above. The COCO converter is tested on a small generated file; the download URLs were not reachable from the build sandbox.
+
 ## Verified vs not verified
 
-**Verified by running it (15 passing tests plus live runs):**
+**Verified by running it (16 passing tests plus live runs):**
 - Recall@k and MRR against hand-computed values; a shuffled-label control scores near chance; exact-image relevance scores far below attribute relevance on the synthetic set, so the metric is not inflated.
 - Qdrant index: correct neighbour order and scores, payload filtering, on-disk persistence, dimension-mismatch rejection.
 - The stand-in encoder classifies all 240 synthetic test images to their true colour and shape.

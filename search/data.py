@@ -49,6 +49,27 @@ def flickr_captions_to_manifest(captions_file: str, images_dir: str, out_path: s
     return len(rows)
 
 
+def coco_captions_to_manifest(captions_json: str, images_dir: str, out_path: str) -> int:
+    """Convert a COCO captions file (captions_val2017.json) to a manifest. Images that are listed but missing on disk
+    are skipped, so a partial image download still works. Paths are relative to the manifest."""
+    with open(captions_json) as f:
+        coco = json.load(f)
+    files = {im["id"]: im["file_name"] for im in coco["images"]}
+    caps = defaultdict(list)
+    for a in coco["annotations"]:
+        caps[a["image_id"]].append(a["caption"].strip())
+    base = os.path.dirname(os.path.abspath(out_path))
+    rows = []
+    for iid in sorted(files):
+        path = os.path.join(images_dir, files[iid])
+        if caps.get(iid) and os.path.exists(path):
+            rows.append({"image": os.path.relpath(path, base), "captions": caps[iid]})
+    if not rows:
+        raise ValueError("no images with captions found; check --images points at the extracted val2017 folder")
+    write_manifest(rows, out_path)
+    return len(rows)
+
+
 _TEMPLATES = ["a {c} {s}", "{c} {s} on a white background", "a {s} that is {c}", "picture of a {c} {s}"]
 
 
