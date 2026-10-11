@@ -30,6 +30,17 @@ def l2_normalize(x: np.ndarray) -> np.ndarray:
     return x / np.maximum(n, 1e-12)
 
 
+def as_feature_tensor(out):
+    """transformers' get_*_features returns a tensor in older releases and a ModelOutput (embedding in
+    `pooler_output`) in newer ones. Accept both."""
+    if hasattr(out, "float"):
+        return out
+    pooled = getattr(out, "pooler_output", None)
+    if pooled is None:
+        raise TypeError(f"cannot read embeddings from {type(out).__name__}; expected a tensor or an output with pooler_output")
+    return pooled
+
+
 class SigLIPEncoder:
     """Google SigLIP via Hugging Face transformers. Heavy imports happen lazily in __init__."""
 
@@ -55,7 +66,7 @@ class SigLIPEncoder:
         with self.torch.no_grad():
             for b in self._batches(images):
                 inp = self.processor(images=[im.convert("RGB") for im in b], return_tensors="pt").to(self.device)
-                out.append(self.model.get_image_features(**inp).float().cpu().numpy())
+                out.append(as_feature_tensor(self.model.get_image_features(**inp)).float().cpu().numpy())
         return l2_normalize(np.concatenate(out))
 
     def encode_texts(self, texts: list[str]) -> np.ndarray:
@@ -65,7 +76,7 @@ class SigLIPEncoder:
                 # SigLIP was trained with fixed-length padding; other padding hurts quality.
                 inp = self.processor(text=b, padding="max_length", max_length=64, truncation=True,
                                      return_tensors="pt").to(self.device)
-                out.append(self.model.get_text_features(**inp).float().cpu().numpy())
+                out.append(as_feature_tensor(self.model.get_text_features(**inp)).float().cpu().numpy())
         return l2_normalize(np.concatenate(out))
 
 

@@ -208,3 +208,15 @@ def test_write_manifest_creates_missing_folders(tmp_path):
     out = tmp_path / "a" / "b" / "m.jsonl"
     write_manifest([{"image": "x.jpg", "captions": ["c"]}], str(out))
     assert out.exists()
+
+
+def test_feature_extraction_accepts_tensor_or_model_output():
+    from types import SimpleNamespace
+    from search.encoders import as_feature_tensor
+    class T:                                     # stands in for a torch tensor (has .float)
+        def float(self): return self
+    t = T()
+    assert as_feature_tensor(t) is t
+    assert as_feature_tensor(SimpleNamespace(pooler_output=t)) is t
+    with pytest.raises(TypeError, match="pooler_output"):
+        as_feature_tensor(SimpleNamespace(pooler_output=None))
