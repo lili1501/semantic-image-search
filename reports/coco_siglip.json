@@ -1,0 +1,13 @@
+{
+  "recall@1": 0.4716558727112817,
+  "recall@5": 0.7208763092668106,
+  "recall@10": 0.8059486687455025,
+  "mrr": 0.57796938476358,
+  "n_queries": 25014,
+  "search_ms_p50": 6.6977692767977715,
+  "search_ms_p95": 8.29955949448049,
+  "text_encode_ms_per_query": 0.3348798218149785,
+  "gallery_size": 5000,
+  "encoder": "google/siglip-base-patch16-224",
+  "relevance": "image"
+}

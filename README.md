@@ -5,9 +5,8 @@ SigLIP embeds images and text into one space; a Qdrant collection stores the ima
 cosine nearest-neighbour queries; a FastAPI service exposes it and a Streamlit page is the UI.
 
 > **Status.** The pipeline, index, metrics, API and UI are tested here with a tiny stand-in encoder on
-> synthetic coloured-shape images. **The real SigLIP model and real photo datasets were never run**
-> (the build sandbox cannot reach Hugging Face), so this repo contains **no retrieval-quality numbers for
-> SigLIP**. See "Verified vs not verified" and "Running with SigLIP".
+> synthetic coloured-shape images. **The build sandbox never ran SigLIP** (it cannot reach Hugging Face); the numbers in "Results" below were measured
+> afterwards on a GPU cluster. See "Verified vs not verified" and "Running with SigLIP".
 
 ```
 images ──SigLIP image tower──▶ L2-normalised vectors ──▶ Qdrant (cosine) ◀── SigLIP text tower ◀── "query text"
@@ -69,6 +68,20 @@ unzip -q val2017.zip && unzip -q annotations_trainval2017.zip annotations/captio
 python -m search.cli coco --captions data/annotations/captions_val2017.json --images data/val2017 --out data/coco/manifest.jsonl
 ```
 Then use `data/coco/manifest.jsonl` in steps 2-3 above. The COCO converter is tested on a small generated file; the download URLs were not reachable from the build sandbox.
+
+## Results: zero-shot SigLIP on COCO val2017 (measured on HiPerGator)
+
+Text-to-image retrieval: each of 25,014 captions is a query, and the only correct result is its source image among 5,000 images.
+Model `google/siglip-base-patch16-224`, no fine-tuning. Raw output: `reports/coco_siglip.json`.
+
+| Recall@1 | Recall@5 | Recall@10 | MRR | Qdrant search p50 / p95 |
+|---|---|---|---|---|
+| 47.2% | 72.1% | 80.6% | 0.578 | 6.7 ms / 8.3 ms |
+
+How to read these: the gallery is COCO **val2017** (5,000 images), not the Karpathy 5K test split used in most papers, so the
+numbers are not directly comparable to published tables. Search latency is the embedded (local-folder) Qdrant, which is exact
+brute-force search over 5,000 vectors, not an HNSW server; it excludes text encoding and any HTTP overhead. A single run, no
+confidence intervals. COCO annotations are CC BY 4.0; the images carry their Flickr licences.
 
 ## Verified vs not verified
 
